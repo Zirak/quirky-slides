@@ -1,0 +1,830 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Zirak | The Quirky Side of ES2015</title>
+
+    <style>
+    .reveal .slides {
+        font-size: 75%;
+        font-family: sans-serif;
+    }
+
+    .font-loaded .reveal .slides {
+        font-family: 'PT Sans', sans-serif;
+    }
+    .font-loaded .reveal .slides h1, .font-loaded .reveal .slides h3 {
+        font-family: 'PT Serif', serif;
+    }
+
+    .reveal .slides a {
+        color: #3e61c5;
+    }
+
+    .reveal .slides pre {
+        font-size: 50%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .reveal .magic-center {
+        position: absolute;
+        top: 0; bottom: 0; right: 0; left: 0;
+        margin: auto;
+    }
+    </style>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/serif.css">
+    <link rel="stylesheet" href="css/solarized-light.css">
+</head>
+<body>
+    <div class="reveal">
+    <div class="slides">
+        <section>
+            <h1>The Quirky Side of ES2015</h1>
+        </section>
+
+        <section>
+            <h3>whoami</h3>
+            <img src="images/awesome.png" width="256" height="256" style="border: 0; float: right; box-shadow: initial;" />
+            <ul>
+                <li>Zirak</li>
+                <li>I like JS</li>
+                <li><a href="http://zirak.me">http://zirak.me</a></li>
+                <p>&nbsp;</p>
+                <li>Did I forget to record my screen?</li>
+                <li>But enough about me</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>ES2015 has been widely covered</h3>
+            <ul>
+                <li>We know all about the cool features
+                <ul>
+                    <li>Arrow functions, let and const, destructuring, ...</li>
+                </ul>
+                </li>
+                <li>But this is still JavaScript. What about the ugly side that we know and love?</li>
+                <li>Where's the wat?</li>
+            </ul>
+
+            <pre class="fragment"><code data-trim class="hljs">
+&gt; [] + []
+''
+&gt; [] + {}
+'[object Object]'
+&gt; {} + []
+0
+&gt; {} + {}
+NaN
+            </code></pre>
+
+            <img class="fragment" src="images/wat-gigantic-duck.jpg" width=640 height=420
+                style="position: absolute; margin: auto; top: 0; bottom: 0; left: 0; right: 0; border: 0;" />
+        </section>
+
+        <section>
+            <section>
+                <h1>Default Arguments</h1>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs">
+// "Default values" are assigned at *run time*, unlike the classic python example:
+function foo(x=[]) { x.push(1); return x; }
+console.log(foo()); // [1]
+console.log(foo()); // [1], in python: [1, 1]
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs">
+// And the default values can be any expression!
+var x = 0;
+var incX = () =&gt; x++;
+function blah(a=incX()) { return x; }
+
+console.log(blah()); // 0
+console.log(blah()); // 1
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs javascript">
+// And you can reference any previously declared parameter
+let isWut = (a, b=a || 12) =&gt; b;
+
+isWut(true); // true
+isWut(''); // 12
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ugly Code</h3>
+
+                <pre class="fragment"><code data-trim class="hljs javascript">
+let sum = (a, b, s=a+b) =&gt; s;
+sum(10, 20); // 30
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs javascript">
+let fib = (n, s=n > 2 ? sum(fib(n-1), fib(n-2)) : 1) =&gt; s;
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs javascript">
+let f = (a=(() =&gt; wut(12))(), b=(function (x, ...[{ dis: { is: y } }]) {
+    return x ? ami(y) : 3
+})(true instanceof {
+    [Symbol.hasInstance()](x) { return !!x }
+}), { dis: { is: 'wat' } }) =&gt; false;
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs">
+var Y = function(F) {
+    return function(f) {
+        return f(f);
+    }(function(f) {
+        return F(
+            function(x) { return (f(f))(x); }
+        );
+    });
+};
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs">
+// I'm curious, what about eval?
+function foo(a=eval('var x = 12; x')) {
+    console.log(a); // 12
+    console.log(x); // ReferenceError: x is not defined
+    // where's x?
+}
+foo();
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs">
+// Maybe it's only defined in the parameters?
+function foo(a=eval('var x = 12; x'), b=x) {
+    console.log(b);
+}
+foo(); // ReferenceError: x is not defined
+                </code></pre>
+
+<pre class="fragment"><code data-trim class="hljs">
+// What about shadowing declarations?
+var x = 17;
+function foo(a=x, x=12) {
+    console.log(a);
+}
+
+foo(); // ReferenceError: x is not defined
+// !?
+</code></pre>
+            </section>
+
+            <section>
+                <h3>use strict</h3>
+
+                <pre class="fragment"><code data-trim class="hljs">
+// One of strict mode's implications:
+function sloppyFoo() { 'use sloppy'; return this; }
+function strictFoo() { 'use strict'; return this; }
+
+sloppyFoo(); // global object
+strictFoo(); // undefined
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs">
+// But what about this:
+function foo(a=this) {
+    'use strict';
+    return a;
+}
+
+'use sloppy';
+foo(); // undefined? global object?
+                </code></pre>
+
+                <pre class="fragment"><code data-trim class="hljs">
+// And what about this?
+function foo(a=(function() {
+    let x = 12;
+    with ({ x: 42 })
+        return x;
+    // with is a syntax error in strict mode
+})) {
+    'use strict';
+    return a;
+}
+                </code></pre>
+
+                <span class="fragment magic-center"
+                    style="color: maroon; width: 500px; height: 100px; font-size: 300%; transform: rotate(20deg);">
+                    Syntax Error
+                </span>
+            </section>
+        </section>
+
+    <section>
+        <section><h1>Symbols</h1></section>
+
+        <section>
+            <h3>Symbol.hasInstance</h3>
+            <pre><code data-trim class="hljs javascript">
+// Allows you to override `instanceof`
+let awsesomeObject = {
+    [Symbol.hasInstance](thing) {
+        return thing.x > thing.y;
+    }
+};
+
+{ x: 80, y: -1 } instanceof awesomeObject; // true
+{ x: 10, y: 79 } instanceof awesomeObject; // false
+
+// Let's abuse it
+        </code></pre>
+
+            <pre class="fragment"><code data-trim class="hljs javascript">
+// Randomly switch my mind about my children
+var thing = {
+    [Symbol.hasInstance]() { return Math.random() &gt; 0.5; }
+};
+
+4 instanceof thing; // true? false? Who knows!
+        </code></pre>
+
+            <pre class="fragment"><code data-trim class="hljs javascript">
+const Even = {
+    [Symbol.hasInstance](x) { return !(x % 2); }
+};
+
+4 instanceof Even; // true
+5 instanceof Even; // false
+            </code></pre>
+        </section>
+
+        <section style="text-align: left;">
+            <pre><code data-trim class="hljs javascript">
+// Something I couldn't figure out: Why isn't it called on functions?
+function foo() {}
+foo[Symbol.hasInstance] = function (x) {
+    console.log('wut', x);
+    return x === 4;
+};
+
+4 instanceof foo; // false, no logs
+            </code></pre>
+
+            <ul class="fragment current-visible" style="position: absolute">
+                <li>I'll be honest: I have no idea why</li>
+                <li><a href="https://tc39.github.io/ecma262/#sec-instanceofoperator">Spec:</a>
+                    <ol style="font-size: 70%">
+                        <li>If <a href="https://tc39.github.io/ecma262/#sec-ecmascript-data-types-and-values" target="_blank">Type</a>(C) is not Object, throw a TypeError exception.
+                        </li>
+                        <li>Let <em>instOfHandler</em> be <a href="https://tc39.github.io/ecma262/#sec-getmethod" target="_blank">GetMethod</a>(C, @@hasInstance).
+                        </li>
+                        <li>If <em>instOfHandler</em> is not undefined, then
+                            <ol>
+                                <li>Return <a href="https://tc39.github.io/ecma262/#sec-toboolean" target="_blank">ToBoolean</a>(<a href="https://tc39.github.io/ecma262/#sec-call" target="_blank">Call</a>(instOfHandler, C, « O »)).
+                                </li>
+                            </ol>
+                        </li>
+                        <li>If <a href="https://tc39.github.io/ecma262/#sec-iscallable" target="_blank">IsCallable</a>(C) is false, throw a TypeError exception.</li>
+                        <li>Return ? <a href="https://tc39.github.io/ecma262/#sec-ordinaryhasinstance" target="_blank">OrdinaryHasInstance</a>(C, O).</li>
+                    </ol>
+                </li>
+            </ul>
+
+            <pre class="fragment"><code data-trim class="hljs cpp">
+// v8 source
+MaybeHandle&lt;Object&gt; Object::InstanceOf(Isolate* isolate, Handle&lt;Object&gt; object,
+                                       Handle&lt;Object&gt; callable) {
+  // The {callable} must be a receiver.
+  if (!callable-&gt;IsJSReceiver()) {
+    THROW_NEW_ERROR(isolate,
+                    NewTypeError(MessageTemplate::kNonObjectInInstanceOfCheck),
+                    Object);
+  }
+
+  // Lookup the @@hasInstance method on {callable}.
+  Handle&lt;Object&gt; inst_of_handler;
+  ASSIGN_RETURN_ON_EXCEPTION(
+      isolate, inst_of_handler,
+      JSReceiver::GetMethod(Handle&lt;JSReceiver&gt;::cast(callable),
+                            isolate-&gt;factory()-&gt;has_instance_symbol()),
+      Object);
+  if (!inst_of_handler-&gt;IsUndefined(isolate)) {
+    // Call the {inst_of_handler} on the {callable}.
+    Handle&lt;Object&gt; result;
+    ASSIGN_RETURN_ON_EXCEPTION(
+        isolate, result,
+        Execution::Call(isolate, inst_of_handler, callable, 1, &amp;object),
+        Object);
+    return isolate-&gt;factory()-&gt;ToBoolean(result-&gt;BooleanValue());
+  }
+
+  // The {callable} must have a [[Call]] internal method.
+  if (!callable-&gt;IsCallable()) {
+    THROW_NEW_ERROR(
+        isolate, NewTypeError(MessageTemplate::kNonCallableInInstanceOfCheck),
+        Object);
+  }
+
+  // Fall back to OrdinaryHasInstance with {callable} and {object}.
+  Handle&lt;Object&gt; result;
+  ASSIGN_RETURN_ON_EXCEPTION(
+      isolate, result,
+      JSReceiver::OrdinaryHasInstance(isolate, callable, object), Object);
+  return result;
+            </code></pre>
+
+            <h1 class="fragment fade-in" style="position: absolute; top: 50%; left: 20%; color: darkcyan;">¯\_(ツ)_/¯</h1>
+        </section>
+
+        <section>
+            <h3>Symbol.replace</h3>
+
+            <pre class="fragment"><code data-trim class="hljs javascript">
+// Defined on RegExp.prototype, called in str.replace
+'foobar'.replace({
+    [Symbol.replace](subj, rep) {
+        return `wut${rep}`;
+    }
+}, 123); // wut123
+// Friends &amp; Family: Symbol.{match,search,split}
+            </code></pre>
+
+            <pre class="fragment"><code data-trim class="hljs javascript">
+function countedReplace(pattern, count) {
+    return {
+        pattern, count,
+        [Symbol.replace](subj, rep) {
+            let c = this.count;
+            // In This Function: Avoiding subclassing RegExp
+            let p = new RegExp(this.pattern, this.pattern.flags.replace(/g|$/, 'g'));
+
+            return subj.replace(p, $0 =&gt; c &lt;= 0 ? $0 : (c--, rep));
+        }
+    }
+}
+
+'foo bar baz quz qux'.replace(countedReplace(/\w+/, 2), 'wut');
+// wut wut baz quz qux
+            </code></pre>
+
+            <ul class="fragment"><li>Never used anywhere, ever.</li></ul>
+
+            <img src="images/symbol-replace-japanese.png" class="fragment magic-center" />
+            <img src="images/symbol-replace-usage.png" class="fragment magic-center" />
+            <img src="images/symbol-replace-nothing.png" class="fragment magic-center" />
+
+            <h1 class="fragment fade-in" style="position: absolute; top: 50%; left: 20%; color: darkcyan;">¯\_(ツ)_/¯</h1>
+        </section>
+
+        <section>
+            <h3>Symbol.isConcatSpreadable</h3>
+            <pre class="fragment"><code data-trim class="hljs javascript">
+Window.prototype[Symbol.isConcatSpreadable] = true;
+[].concat(window); // list of frames
+
+// functions have length too!
+function foo(a, b, c){}
+[].concat(foo); // [foo]
+Function.prototype[Symbol.isConcatSpreadable] = true;
+[].concat(foo); // [ undefined ✗ 3 ], notice that it's not undefined values but keys
+            </code></pre>
+
+            <pre class="fragment"><code data-trim class="hljs javascript">
+// Maybe flipping it to false?
+var foo = [0, 1, 2];
+[-2, -1].concat(foo); // [-2, -1, 0, 1, 2]
+
+foo[Symbol.isConcatSpreadable] = false;
+[-2, -1].concat(foo); // [-2, -1, [0, 1, 2]]
+// But then why not put the argument in an array?
+            </code></pre>
+
+            <h1 class="fragment fade-in" style="position: absolute; top: 50%; left: 20%; color: darkcyan;">¯\_(ツ)_/¯</h1>
+        </section>
+
+        <section>
+            <h3>Symbol.unscopables</h3>
+            <ul>
+                <li>One of the weirdest symbols out there</li>
+                <li>Hides properties from with</li>
+                <pre><code data-trim class="hljs javascript">
+var thing = {
+    foo: 4
+};
+
+with (thing) {
+    console.log(foo); // 4
+}
+
+thing[Symbol.unscopables] = { foo: true };
+
+with (thing) {
+    console.log(foo); // ReferenceError: foo is not defined
+}
+                </code></pre>
+                <li>Why?
+                <ul>
+                    <li>Only used once in the spec to hide new Array functions</li>
+                    <li>Perhaps to prevent breaking the web?</li>
+                </ul>
+            </ul>
+
+            <h1 class="fragment fade-in" style="position: absolute; top: 30%; left: 20%; color: darkcyan;">¯\_(ツ)_/¯</h1>
+        </section>
+    </section>
+
+<section>
+    <section>
+        <h1>Functions</h1>
+    </section>
+
+    <section>
+        <ul>
+        <li>We received many new ways to declare functions: <ul>
+            <li>Arrow functions <ul>
+                <li><code>let arrowFunc = (a, b) =&gt; { things }</code>
+            </ul></li>
+            <li>Method declarations <ul>
+                <li><code>var obj = { method() { things } };</code></li>
+            </ul></li>
+            <li>Generators <ul>
+                <li><code>function *gen() { yield things }</code>
+            </li></ul>
+            <li>Async functions <ul>
+                <li><code>async function neat() { await things }</code></li>
+            </ul></li>
+            <li>Classes <ul>
+                <li><code>class Thingy { methods }</code></li>
+            </ul></li>
+            <li>Turns out they're a bit different from regular functions and each other</li>
+        </ul></li>
+    </section>
+
+    <section>
+        <pre><code data-trim class="hljs javascript">
+// Classes can't be called:
+class Foo {}
+Foo(); // TypeError
+
+// Additionally, they're not hoisted, just like `let`:
+(function() {
+    new Foo(); // ReferenceError
+    class Foo {}
+})();
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// Methods, generators, async functions and arrows can't be `new`ed:
+var obj = {
+    meth() {}
+};
+function *gen() {}
+asynf function asy() {}
+var arrow = () => {};
+
+new obj.meth(); // TypeError
+new gen(); // TypeError
+new asy(); // TypeError
+new arrow(); // TypeError
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// ...but generators do have a prototype
+obj.meth.prototype; // undefined
+arrow.prototype; // undefined
+asy.prototype; // undefined
+gen.prototype; // Generator
+// wut?
+        </code></pre>
+    </section>
+
+    <section>
+        <pre><code data-trim class="hljs javascript">
+// Generators also have an extra step in their inheritance hierarcy:
+Object.getPrototypeOf(gen); // GeneratorFunction
+Object.getPrototypeOf(Object.getPrototypeOf(gen)); // Function.prototype
+// GeneratorFunction is not exposed on the global object :(
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// It can still be used, just like the regular Function constructor!
+var GeneratorFunction = Object.getPrototypeOf(gen).constructor;
+var gen = GeneratorFunction('let x = yield 4; return x;');
+var g = gen();
+console.log(g.next()); // { value: 4, done: false }
+console.log(g.next(12)); // { value: 12, done: true }
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// This also applies to async functions:
+var AsyncFunction = Object.getPrototypeOf(asy).constructor;
+var wut = AsyncFunction('return await 4')
+wut().then(r => console.log(r)); // 4
+        </code></pre>
+    </section>
+
+    <section>
+        <ul>
+        <li>Wait a minute...what does yield do in regular functions?</li>
+        <pre class="fragment"><code data-trim class="hljs javascript">
+(function () {
+    yield 4; // SyntaxError: Unexpected number
+})();
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+(function () {
+    var x = yield; // ReferenceError: yield is not defined
+    return x;
+})();
+        </code></pre>
+
+<pre class="fragment"><code data-trim class="hljs javascript">
+var yield = 4;
+console.log(yield); // 4
+// wut?
+        </code></pre>
+
+        <li class="fragment">Did you miss browser inconsistencies?</li>
+        <li class="fragment">Firefox treats the first two as Generators</li>
+        <li class="fragment">Have fun!</li>
+        </ul>
+    </section>
+
+    <!-- reconsider removing new.target. ping Zirak if you're reading this and wanna know more -->
+
+    <section>
+        <h3>extends</h3>
+        <pre><code data-trim class="hljs javascript">
+// The right operand (RHS) of extends can be any expression
+class Foo extends (false || Number) {}
+// Remember writing bad code abusing default arguments? :D
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// Extending null has a special meaning, similar to Object.create(null)
+class Regular {}
+Object.getPrototypeOf(Regular.prototype); // Object.prototype
+
+class Foo extends null {}
+Object.getPrototypeOf(Regular.prototype); // null
+
+// ...but leads to funky shit
+new Foo; // TypeError: super is not a constructor
+
+class Bar extends null { constructor() {} }
+new Bar; // ReferenceError: this is not defined
+// wut?
+
+// Open question: How do we properly implement Foo or Bar?
+        </code></pre>
+
+        <ul class="fragment">
+            <li><a href="https://esdiscuss.org/topic/extends-null">https://esdiscuss.org/topic/extends-null</a></li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>A small side note on scope</h3>
+
+        <pre><code data-trim class="hljs javascript">
+class Foo extends 4 {} // TypeError, legit
+        </code></pre>
+
+        <pre class="fragment" data-fragment-index="1"><code class="hljs javascript" data-trim>
+class Foo {} // SyntaxError: Foo already declared
+        </code></pre>
+
+        <pre class="fragment" data-fragment-index="2"><code class="hljs javascript" data-trim>
+Foo // ReferenceError: Foo is not defined
+// wut?
+        </code></pre>
+
+        <pre class="fragment" data-fragment-index="3"><code class="hljs javascript" data-trim>
+// Also works with the other temporal-dead-zone annhiliating declarations, let and const
+let foo = (() => { throw 'wut'; })(); // UncaughtError
+
+foo; // ReferenceError
+foo = 4; // SyntaxError: foo has already been declared
+        </code></pre>
+
+        <ul class="fragment" data-fragment-index="3"><li>Can be (ab)used to prevent a global by a certain name from being declared</li></ul>
+    </section>
+
+    <section>
+        <h3><code>super</code></h3>
+        <pre><code data-trim class="hljs javascript">// Usually used inside classes
+// Inspired by http://www.sitesbay.com/java/java-super-keyword
+class Student {
+    message() {
+        console.log("Good Morning Sir");
+    }
+}
+class Faculty extends Student {
+    message() {
+        console.log("Good Morning Students");
+    }
+    display() {
+        this.message();//will invoke or call current class message() method
+        super.message();//will invoke or call parent class message() method
+    }
+}
+
+// I had to fix a bug in this part, s/Student/Faculty/ sorry sitesbay.com
+let f = new Faculty();
+f.display();
+// Good Morning Students
+// Good Morning Sir</code></pre>
+    </section>
+
+    <section>
+        <h3><code>super</code> outside classes</h3>
+        <pre class="fragment"><code data-trim class="hljs javascript">
+var parent = {
+    x: 4
+};
+var child = {
+    x: 7,
+    whatsX() {
+        console.log(super.x); // 4
+    },
+    heynow: function () {
+        console.log(super.x); // SyntaxError, super can only be used inside methods
+    }
+};
+Object.setPrototypeOf(child, parent);
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// super is computed from a hidden property called [[HomeObject]] which refers
+//to the object at *function creation time*, so the following will not work as
+//you expect:
+var riddle =
+    wut() {
+        console.log(super.x); // Object.getPrototypeOf(riddle).x === undefined
+    }
+};
+Object.assign(child, riddle);
+        </code></pre>
+    </section>
+
+    <section>
+        <h3>Abusing <code>super</code></h3>
+        <pre class="fragment"><code data-trim class="hljs javascript">
+var foo = {
+    x: 4,
+    whatsX() {
+        return super.x;
+    }
+};
+
+var p = new Proxy(foo, {});
+Object.setPrototypeOf(foo, p);
+
+// Inside of `foo`'s methods, `super` refers to the proxy, which delegates to `foo`
+// Meaning: We sort of get a reference to [[HomeObject]]!
+        </code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+foo.whatsX(); // 4
+foo.whatsX.call({ x: 12 }); // 4
+
+var wut = foo.whatsX.bind({ x: 13 });
+wut(); // 4
+
+// win
+        </code></pre>
+    </section>
+</section>
+
+<section>
+    <section>
+        <h1>Legacy</h1>
+        <p>Elephants in the room since 1999</p>
+    </section>
+
+    <section>
+        <h3>break</h3>
+        <pre><code data-trim class="hljs javascript">
+// `break` and `continue` can be used with labels to control loops:
+outer: for (...) {
+    for (...) {
+        break outer;
+    }
+}
+// Not frequently used, regarded as bad practice.</code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+// Now tell me, what does this do (hint: not a syntax error)?
+foo: {
+    console.log(1);
+    break foo;
+    console.log(2);
+}</code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+foo: function foo() {
+    foo: {
+        console.log(1);
+        break foo;
+        console.log(2);
+    }
+}</code></pre>
+
+        <pre class="fragment"><code data-trim class="hljs javascript">
+foo: try { throw 'wut'; }
+catch (e) {
+    console.log(1);
+    break foo;
+    console.log(2);
+}</code></pre>
+    </section>
+
+    <section>
+        <h3>Comments</h3>
+
+        <ul>
+        <li>Remember this?
+            <pre><code data-trim class="hljs html">
+&lt;script type="text/javascript"&gt;
+&lt;!-- &lt;![CDATA[
+// awesome code goes here
+]] --&gt;
+&lt;/script&gt;
+            </code></pre>
+        </li>
+        <li class="fragment">Ever wondered how it works? After all, it's invalid javascript.</li>
+        <li class="fragment">Or is it?
+            <pre class="fragment"><code data-trim class="hljs javascript">
+console.log(0);
+&lt;!-- console.log('wtf is this!?')
+console.log(1);
+--&gt; console.log('i will not run!');
+console.log(2);
+            </code></pre>
+        </li>
+
+        <li class="fragment">&lt;!-- and --&gt; are parsed as line comments!</li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>Fun times with comments</h3>
+        <ul>
+        <li>So we've got a comment which works in both javascript and html</li>
+        <li>Let's make a file that's both js and html!
+        <pre class="fragment"><code data-trim class="hljs html">
+&lt;!--
+console.log('wat');
+--&gt; &lt;b&gt;wat&lt;/b&gt;
+        </code></pre>
+        </li>
+
+        <li class="fragment">Serve as js <ul>
+            <li><code>console.log('wat')</code></li>
+        </ul></li>
+
+        <li class="fragment">Serve as html <ul>
+            <li><code>&lt;b&gt;wat&lt;/b&gt;</code></li>
+        </ul></li>
+    </ul>
+
+    <img src="images/wat-ostrich-banana.jpg" class="fragment magic-center" />
+    </section>
+</section>
+
+<section>
+    <h1>Thank you</h1>
+    <p>Questions?</p>
+</section>
+</div>
+</div>
+
+    <script src="js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        transition: 'slide',
+        dependencies: [
+            { src: 'plugin/markdown/marked.js' },
+            { src: 'plugin/markdown/markdown.js' },
+            { src: 'plugin/highlight/highlight.js', async: true, callback() { hljs.initHighlightingOnLoad(); } }
+        ]
+    });
+
+    const whyareyoureadingthisanddidyoufigureoutwhatthisvariableisnamed = document.createElement('link');
+    whyareyoureadingthisanddidyoufigureoutwhatthisvariableisnamed.href="https://fonts.googleapis.com/css?family=PT+Sans|PT+Serif";
+    whyareyoureadingthisanddidyoufigureoutwhatthisvariableisnamed.rel="stylesheet";
+    whyareyoureadingthisanddidyoufigureoutwhatthisvariableisnamed.onload = () => document.body.classList.add('font-loaded');
+    document.head.appendChild(whyareyoureadingthisanddidyoufigureoutwhatthisvariableisnamed);
+    </script>
+</body>
+</html>
