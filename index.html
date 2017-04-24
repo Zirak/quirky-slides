@@ -766,6 +766,7 @@ var parent = {
     x: 4
 };
 var child = {
+    __proto__: parent,
     x: 7,
     whatsX() {
         console.log(super.x); // 4
@@ -774,7 +775,6 @@ var child = {
         console.log(super.x); // SyntaxError, super can only be used inside methods
     }
 };
-Object.setPrototypeOf(child, parent);
         </code></pre>
 
         <pre class="fragment"><code data-trim class="hljs javascript">
@@ -788,6 +788,10 @@ var riddle =
 };
 Object.assign(child, riddle);
         </code></pre>
+
+        <ul class="fragment">
+            <li><a href="https://hackernoon.com/exposing-homeobject-e61061cbfe17">https://hackernoon.com/exposing-homeobject-e61061cbfe17</a></li>
+        </ul>
     </section>
 
     <section>
