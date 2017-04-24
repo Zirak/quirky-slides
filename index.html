@@ -32,6 +32,75 @@
         top: 0; bottom: 0; right: 0; left: 0;
         margin: auto;
     }
+
+.revelation .revelation-text {
+    position: relative;
+    display: block;
+
+    z-index: 10;
+    font-family: cursive;
+    letter-spacing: 0px;
+    text-shadow: 0 1px 0 #666, 0 0 15px #ebae26, 0 0 15px #ebae26, 0 0 15px #ebae26;
+    transform: rotate(-12deg);
+}
+.revelation {
+    background: rgb(211, 61, 61);
+    width: 150px;
+    height: 150px;
+    position: relative;
+    text-align: center;
+    color:white;
+  	z-index:5;
+    margin: 0 auto;
+    transition: transform 1s;
+}
+.revelation:before, .revelation:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 150px;
+    width: 150px;
+    background: rgb(211, 61, 61);
+  	z-index:2;
+
+}
+.revelation:before {
+    transform: rotate(30deg);
+}
+.revelation:after {
+    transform: rotate(60deg);
+}
+.revelation:hover {
+   transform: rotate(360deg);
+}
+
+.revelation.wrap {
+    position: absolute;
+    left: 40%;
+    bottom: 40%;
+
+    background: rgb(211, 61, 61);
+    width: 150px;
+    height: 150px;
+    text-align: center;
+    color:white;
+  	z-index:5;
+    margin:0 auto;
+    box-shadow: 0 0 6px black;
+
+}
+.revelation.wrap:before, .revelation.wrap:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 150px;
+    width: 150px;
+    background: rgb(211, 61, 61);
+  	z-index: 0;
+	box-shadow: 0 0 6px black;
+}
     </style>
 
     <link rel="stylesheet" href="css/reveal.css">
@@ -338,7 +407,39 @@ MaybeHandle&lt;Object&gt; Object::InstanceOf(Isolate* isolate, Handle&lt;Object&
             </code></pre>
 
             <h1 class="fragment fade-in" style="position: absolute; top: 50%; left: 20%; color: darkcyan;">¯\_(ツ)_/¯</h1>
+
+            <div class="fragment fade-in">
+                <div class="revelation wrap">
+                    <div class="revelation">
+                        <span class="revelation-text">A Revelation Occurs!</span>
+                    </div>
+                </div>
+            </div>
         </section>
+
+        <section>
+            <ul>
+                <li>As it turns out, <code>Function.prototype[Symbol.hasInstance]</code> is defined as non-writable!</li>
+            </ul>
+
+            <pre class="fragment" data-fragment-index="1"><code data-trim class="hljs javascript">
+Object.getOwnPropertyDescriptor(Function.prototype, Symbol.hasInstance)
+// { writable: false, enumerable: false, configurable: false, value: function [Symbol.hasInstance]() }
+
+// Writing raises an error in strict mode:
+(() => {
+    "use strict";
+    function foo() {}
+    foo[Symbol.hasInstance] = function(){};
+    // TypeError: Cannot assign to read only property
+})();
+            </code></pre>
+
+            <ul class="fragment" data-fragment-index="1">
+                <li>Lesson learned: Run code in strict mode or you'll look a-fool in presentations</li>
+            </ul>
+        </section>
+
 
         <section>
             <h3>Symbol.replace</h3>
