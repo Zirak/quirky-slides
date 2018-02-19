@@ -300,7 +300,7 @@ function foo(a=(function() {
             <h3>Symbol.hasInstance</h3>
             <pre><code data-trim class="hljs javascript">
 // Allows you to override `instanceof`
-let awsesomeObject = {
+let awesomeObject = {
     [Symbol.hasInstance](thing) {
         return thing.x > thing.y;
     }
